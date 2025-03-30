@@ -372,7 +372,7 @@ if(mode == 'game'):
 	load_mods()
 	print('Запуск МТА...')
 	os.system("mode con cols=70 lines=25")
-	#os.system('launcher.exe')
+	os.system('launcher.exe')
 	os.system("mode con cols=60 lines=25")
 	ctypes.windll.kernel32.SetConsoleTitleA(b"PROxima ModLoader")
 	os.system('cls')

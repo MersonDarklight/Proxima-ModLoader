@@ -377,15 +377,15 @@ if(mode == 'game'):
 	ctypes.windll.kernel32.SetConsoleTitleA(b"PROxima ModLoader")
 	os.system('cls')
 	print('МТА запускается.')
-	time.sleep(444)
-	print('разблокировка файлов...')
-	for process in processes:
-		subprocess.Popen.kill(process)
+	while True:
+		f_read = open("./gtaSA/multiplayer/MTA/logs/console.log", "r", encoding='utf-8')
+		last_line = f_read.readlines()[-1]
+		if "clothes start" in last_line:
+			print("Файлы разблокируются через минуту.")
+			time.sleep(60)
+			for process in processes:
+				subprocess.Popen.kill(process)
+			break
 	exit()
-	started = 1
-	#os.system('cls')
-	#pass
-					
-		#for filename in files:
-    	 #   print(filename)
-start()
+	#started = 1
+#start()

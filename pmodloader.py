@@ -2,16 +2,37 @@ import os
 import subprocess
 import time
 import hashlib
+import datetime
 modsfolderex = 0
-processes = []
+pfileblock = []
+pscripts = []
 proccount = 0
+
+
+
+def log(message, show=True, ptime=False):
+	ctime = datetime.datetime.now().strftime('%H:%M:%S')
+	if show == True:
+		if ptime == True:
+			print(f"[{ctime}]: {message}")
+		else:
+			print(message)
+	with open('pmodloader.log', 'a', encoding='utf-8') as f:
+		f.write(f"[{ctime}]: {message}\n")
+
+with open('pmodloader.log', 'w', encoding='utf-8') as f:
+	f.write('')
+
+log('Запуск Proxima ModLoader...')
+log('Проверка наличия папки с модами...')
+
 if(os.path.exists(os.path.abspath('.') + '\\mods')):
-	print('Папка с модами существует.')
+	log('Папка с модами существует.')
 	modsfolderex = 1
 	respath = os.path.abspath('gtaSA\\multiplayer\\mods\\deathmatch\\resources')
 	workpath = os.path.abspath('.')
 	modpath = workpath + '\\mods'
-	print('Проверка структуры каталога модов...')
+	log('Проверка структуры каталога модов...')
 	tfolders = 0
 	ffolders = 0
 	cfolders = 0
@@ -28,45 +49,47 @@ if(os.path.exists(os.path.abspath('.') + '\\mods')):
 		path = root.replace(respath, '')
 		dirr = modpath + path
 		if os.path.exists(dirr):
-			print(path+' существует.                             ')
+			log(path+' существует.                             ')
 			ffolders = ffolders + 1
 		else:
 			os.mkdir(dirr)
-			print(path+' создана.                             ')
+			log(path+' создана.                             ')
 			cfolders = cfolders + 1
 		print(f'Проверка структуры каталога модов [{ffolders}/{tfolders}]            ', end='\r')
 		time.sleep(0.005)
 
-	print(f'Проверка завершена. [{ffolders}/{tfolders}]                            ')
+	log(f'Проверка завершена. [{ffolders}/{tfolders}]                            ')
 	if cfolders != 0:
-		print(f'Создано папок: {cfolders}')
+		log(f'Создано папок: {cfolders}')
 else:
+	log('Папка с модами не найдена.')
+	log('Проверка библиотек...')
 	modsfolderex = 0
 	piplibs = subprocess.Popen(["pip", "freeze"], encoding='cp866', shell=True, stdout=subprocess.PIPE)
 	pipstd = piplibs.stdout.read()
 	#print(pipstd)
 	if('keyboard' in pipstd):
-		print('keyboard установлен')
+		log('keyboard установлен')
 	else:
 		yn = input('Сейчас будут установлены недостающие библиотеки. Продолжить?[Y/n]: ')
 		if(yn.lower() == 'y'):
-			print('установка keyboard...')
+			log('установка keyboard...')
 			os.system('pip install keyboard')
 		else:
-			print('bye.')
+			log('выход...')
 			time.sleep(2)
 			exit()
 
 	if('pyshortcuts' in pipstd):
-		print('pyshortcuts установлен')
+		log('pyshortcuts установлен')
 	else:
-		print('установка pyshortcuts...')
+		log('установка pyshortcuts...')
 		os.system('pip install pyshortcuts')
 
 	if('gdown' in pipstd):
-		print('gdown установлен')
+		log('gdown установлен')
 	else:
-		print('установка gdown...')
+		log('установка gdown...')
 		os.system('pip install gdown')
 
 
@@ -84,22 +107,25 @@ import requests
 import json
 import sys
 
-print('\nПроверка актуальности...')
+log('')
+log('Проверка актуальности...')
 
 version = 'v0.0.4'
 response = requests.get("https://api.github.com/repos/MersonDarklight/Proxima-ModLoader/releases/latest")
 response.raise_for_status()
 release = response.json()
-print(f"Последний релиз: {release['tag_name']}, установлена: {version}.\n")
+log(f"Последний релиз: {release['tag_name']}, установлена: {version}.\n")
 if version == release['tag_name']:
-	print('Версия актуальна.')
+	log('Версия актуальна.')
 else:
+	log('Версия устарела.', False)
 	print(f"Доступен новый релиз: {release['name']}.\nЧто нового:\n{release['body']}")
 	if(input("\nУстановить? [Y/n]: ").lower() == 'y'):
+		log('Скачивание обновлений...', False)
 		os.execv(sys.executable, ['python', 'update.py'])
 time.sleep(2)
 
-parser = argparse.ArgumentParser(description='A tutorial of argparse!')
+parser = argparse.ArgumentParser(description='')
 parser.add_argument("--m", default="game", help="work mode")
 args = parser.parse_args()
 mode = args.m
@@ -120,7 +146,7 @@ def blockfile():
 	#os.system('fileblock.py --f='+blockpath)
 	global proccount
 	process = subprocess.Popen(args=["python", "fileblock.py", "--f="+blockpath], shell=False, stdout=subprocess.PIPE)
-	processes.append(process)
+	pfileblock.append(process)
 
 	#f=open(blockpath)
 
@@ -133,19 +159,6 @@ def get_hash_md5(file):
 				break
 			m.update(data)
 		return m.hexdigest()	
-
-def gtacheck():
-	while True:
-		if(started == 1):
-			tasklist = subprocess.Popen('tasklist', encoding='cp866', shell=True, stdout=subprocess.PIPE)
-			stdlist = tasklist.stdout.read()
-			if('gta_sa.exe' in stdlist):
-				print('gta found')
-			else:
-				#print('gta closed, exiting..')
-				#exit()
-				pass
-		time.sleep(10)
 
 def load_mods():
 	global blockpath
@@ -172,35 +185,68 @@ def load_mods():
 						modkey = get_hash_md5(root2+'\\'+filename)
 						reskey = get_hash_md5(dirr+'\\'+filename)
 						if(reskey == modkey):
-							print(f'{filename} соответствует моду')
+							log(f'{filename} соответствует моду')
 						else:
-							print('Копируем '+filename+' в '+dirname)
+							log('Копируем '+filename+' в '+dirname)
 							os.remove(dirr+'\\'+filename)
 							shutil.copy(root2+'\\'+filename, dirr)
-							success = success + 1
-						print('Блокируем файл...\n')
+						success = success + 1
+						log('Блокируем файл...\n')
 					except:
-						print('ошибка')
+						log('Ошибка.')
 					blockpath=dirr+'\\'+filename
 					t = threading.Thread(target=blockfile)
 					t.start()
 		break
-	print('Моды успешно загружены!')
+	log(f'Моды успешно загружены![{success}/{total}]\n')
 	time.sleep(1)
 
-def close_gta():
-	keyboard.wait('ctrl+alt+x')
-	os.system('taskkill /f /im gta_sa.exe')
+def scriptstdout():
+	while True:
+		for process in pscripts:
+			output = process.stdout.readline()
+			if output:
+				scrname = str(process).split(':')[3]
+				scrname = scrname.replace(" ['python', '",'')
+				scrname = scrname.replace("']>",'')
+				
+				log(f'[{scrname}] >> ' + output.decode('utf-8').strip(), ptime=True)
+		time.sleep(0.1)
 
-def start():
-	threads = (
-		threading.Thread(target=close_gta),
-		threading.Thread(target=gtacheck, daemon=True)
-	)
-	for t in threads:
-		t.start()
+def load_scripts():
+	total = 0
+	for root, dirs, files in os.walk('./scripts'):
+		for file in files:
+			with open('./scripts/'+file, 'r', encoding='utf-8') as f:
+				ff = f.read()
+				script = ff.split('\n')
+				if 'pmodloader script' in script[0]:
+					author = script[1].split(': ')[1]
+					description = script[2].split(': ')[1]
+					version = script[3].split(': ')[1]
+					log(f'Загружается скрипт {file}[{version}] от {author}.\n{description}\n')
+					process = subprocess.Popen(args=["python", "./scripts/"+file], shell=False, stdout=subprocess.PIPE)
+					pscripts.append(process)
+					total = total + 1
+	if total > 0:
+		log(f'Загружено скриптов: {total}.')
+		pstdout = threading.Thread(target=scriptstdout, daemon=True)
+		pstdout.start()
+	else:
+		log('Нет скриптов для загрузки.')
+	pass
+
+#def start():
+#	threads = (
+#		threading.Thread(target=close_gta),
+#		threading.Thread(target=gtacheck, daemon=True)
+#	)
+#	for t in threads:
+#		t.start()
 
 def modloader_install():
+	log('Установка...')
+	log('Создание каталога для модов...')
 	os.mkdir('mods')
 	respath = os.path.abspath('gtaSA\\multiplayer\\mods\\deathmatch\\resources')
 	workpath = os.path.abspath('.')
@@ -219,7 +265,7 @@ def modloader_install():
 		path = root.replace(respath, '')
 		#print(path)
 		dirr = modpath + path
-		print(path+' создан.                             ')
+		log(path+' создан.                             ')
 		cfolders=cfolders+1
 		try:
 			os.mkdir(dirr)
@@ -229,7 +275,7 @@ def modloader_install():
 			pass
 		print(f'Создание каталогов.. [{cfolders}/{tfolders}]', end='\r')
 		time.sleep(0.005)
-	print(f'Каталог для модов создан. [{cfolders}/{tfolders}]')
+	log(f'Каталог для модов создан. [{cfolders}/{tfolders}]')
 	gdown.download('https://drive.google.com/uc?id=1JR05KXbn3BITNuzZi-wS-s1esZXr1Ouh', 'icon.ico', quiet=False)
 	gdown.download('https://drive.google.com/uc?id=1OzjgUbI3qIJIywzzC8unItkD_OoGGYO0', 'background_logo.png', quiet=False)
 	gdown.download('https://drive.google.com/uc?id=1QMV8PIkzIYyOTinqMmq7YDKl795GtwFC', 'background.png', quiet=False)
@@ -265,7 +311,7 @@ def modloader_install():
 	shutil.move('logo.png', modpath+'\\[proxima]dxgui\\themes\\')
 
 	os.system('cls')
-	print('Установка завершена. Запустите модлоадер с ярлыка на рабочем столе.')
+	log('Установка завершена. Запустите модлоадер с ярлыка на рабочем столе.')
 	time.sleep(6)
 	exit()
 
@@ -370,20 +416,22 @@ else:
 if(mode == 'game'):
 	progresss = 'Загрузка модов...'
 	load_mods()
-	print('Запуск МТА...')
+	load_scripts()
+	time.sleep(5)
+	log('Запуск МТА...')
 	os.system("mode con cols=70 lines=25")
-	os.system('launcher.exe')
-	os.system("mode con cols=60 lines=25")
+	#os.system('launcher.exe')
+	os.system("mode con cols=100 lines=25")
 	ctypes.windll.kernel32.SetConsoleTitleA(b"PROxima ModLoader")
 	os.system('cls')
-	print('МТА запускается.')
+	log('МТА запускается.')
 	while True:
 		f_read = open("./gtaSA/multiplayer/MTA/logs/console.log", "r", encoding='utf-8')
 		last_line = f_read.readlines()[-1]
 		if "clothes start" in last_line:
-			print("Файлы разблокируются через минуту.")
+			log("Файлы разблокируются через минуту.")
 			time.sleep(60)
-			for process in processes:
+			for process in pfileblock:
 				subprocess.Popen.kill(process)
 			break
 	exit()

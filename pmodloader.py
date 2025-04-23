@@ -418,7 +418,7 @@ if(mode == 'game'):
 	time.sleep(5)
 	log('Запуск МТА...')
 	os.system("mode con cols=70 lines=25")
-	#os.system('launcher.exe')
+	os.system('launcher.exe')
 	os.system("mode con cols=100 lines=25")
 	ctypes.windll.kernel32.SetConsoleTitleA(b"PROxima ModLoader")
 	os.system('cls')

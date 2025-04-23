@@ -8,8 +8,6 @@ pfileblock = []
 pscripts = []
 proccount = 0
 
-
-
 def log(message, show=True, ptime=False):
 	ctime = datetime.datetime.now().strftime('%H:%M:%S')
 	if show == True:
@@ -350,7 +348,7 @@ print('================[ MODLOADER ]====[v0.========', end ='\r')
 time.sleep(0.1)
 print('================[ MODLOADER ]====[v0.0.======', end ='\r')
 time.sleep(0.1)
-print('================[ MODLOADER ]====[v0.0.4]====', end ='\r')
+print('================[ MODLOADER ]====[v0.0.5]====', end ='\r')
 
 time.sleep(2)
 os.system('cls')
